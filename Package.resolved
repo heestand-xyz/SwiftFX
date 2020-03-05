@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "NodeIO",
+        "repositoryURL": "https://github.com/hexagons/NodeIO.git",
+        "state": {
+          "branch": null,
+          "revision": "dccf1dca588ae93a00693742bf08d0427b795701",
+          "version": "0.1.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

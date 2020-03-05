@@ -1,4 +1,4 @@
-# SwiftFX
+<img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Banner/SwiftFX.png?raw=true" height="256"/>
 
 Powered by Metal through [PixelKit](https://github.com/hexagons/pixelkit)
 

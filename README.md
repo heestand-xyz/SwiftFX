@@ -24,7 +24,7 @@ struct ContentView: View {
     }
 }
 ~~~
-| <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world.png?raw=true" width="256"/> | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world_edge.png?raw=true" width="256"/> | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world_zoom_blur.png?raw=true" width="256"/> |
+| <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world.png?raw=true" width="256"/> | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world_edge.png?raw=true" width="256"/> | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world_edge_zoom_blur.png?raw=true" width="256"/> |
 | --- | --- | --- |
 |  `Text("Hello, World!")`  |  `.fxEdge()`  |  `.fxBlur(style: .zoom)`  |
 

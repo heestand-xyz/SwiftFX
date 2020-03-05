@@ -3,24 +3,6 @@
 Powered by Metal through [PixelKit](https://github.com/hexagons/pixelkit)
 
 
-## Install
-
-~~~~swift
-.package(url: "https://github.com/hexagons/SwiftFX.git", from: "0.1.0")
-~~~~
-
-## Setup
-
-~~~~swift
-#if os(iOS)
-fxMetalLib(url: Bundle.main.url(forResource: "PixelKitShaders-iOS", withExtension: "metallib")!)
-#elseif os(macOS)
-fxMetalLib(url: URL(fileURLWithPath: "/path/to/PixelKitShaders-macOS.metallib"))
-#endif
-~~~~
-
-You can find the latest Metal library from PixelKit [here](https://github.com/hexagons/PixelKit/tree/master/Resources/Metal%20Libs).
-
 ## Example
 
 ~~~swift
@@ -45,6 +27,26 @@ struct ContentView: View {
 | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world.png?raw=true" width="256"/> | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world_edge.png?raw=true" width="256"/> | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world_zoom_blur.png?raw=true" width="256"/> |
 | --- | --- | --- |
 |  `Text("Hello, World!")`  |  `.fxEdge()`  |  `.fxBlur(style: .zoom)`  |
+
+
+## Install
+
+~~~~swift
+.package(url: "https://github.com/hexagons/SwiftFX.git", from: "0.1.0")
+~~~~
+
+## Setup
+
+~~~~swift
+#if os(iOS)
+fxMetalLib(url: Bundle.main.url(forResource: "PixelKitShaders-iOS", withExtension: "metallib")!)
+#elseif os(macOS)
+fxMetalLib(url: URL(fileURLWithPath: "/path/to/PixelKitShaders-macOS.metallib"))
+#endif
+~~~~
+
+You can find the latest Metal library from PixelKit [here](https://github.com/hexagons/PixelKit/tree/master/Resources/Metal%20Libs).
+
 
 ## Effects
 

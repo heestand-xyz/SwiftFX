@@ -69,6 +69,16 @@ extension View {
 }
 
 extension NODEOut {
+    func whiteOnBlack() -> ReorderPIX {
+        let reorderPix = ReorderPIX()
+        reorderPix.inputA = self as? PIX & NODEOut
+        reorderPix.inputB = self as? PIX & NODEOut
+        reorderPix.redChannel = .alpha
+        reorderPix.greenChannel = .alpha
+        reorderPix.blueChannel = .alpha
+        reorderPix.alphaChannel = .one
+        return reorderPix
+    }
     func primaryAlpha() -> CrossPIX {
         let darkPix = ReorderPIX()
         darkPix.inputA = self as? PIX & NODEOut
@@ -199,7 +209,7 @@ public extension View {
     }
     
     func fxThreshold(_ value: Binding<CGFloat> = .constant(0.5)) -> FX {
-        fx { $0._threshold(LiveFloat({ value.wrappedValue })) }
+        fx { $0.whiteOnBlack()._threshold(LiveFloat({ value.wrappedValue })).primaryAlpha() }
     }
     
     func fxTwirl(_ value: Binding<CGFloat> = .constant(2.0)) -> FX {

@@ -32,7 +32,7 @@ struct ContentView: View {
 ## Install
 
 ~~~~swift
-.package(url: "https://github.com/hexagons/SwiftFX.git", from: "0.1.0")
+.package(url: "https://github.com/hexagons/SwiftFX.git", from: "0.1.1")
 ~~~~
 
 ## Setup

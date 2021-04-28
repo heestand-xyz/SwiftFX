@@ -45,7 +45,7 @@ fxMetalLib(url: URL(fileURLWithPath: "/path/to/PixelKitShaders-macOS.metallib"))
 #endif
 ~~~~
 
-You can find the latest Metal library from PixelKit [here](https://github.com/hexagons/PixelKit/tree/master/Resources/Metal%20Libs).
+You can find the latest Metal library from PixelKit [here](https://github.com/heestand-xyz/PixelKit/tree/main/Source/Metal).
 
 
 ## Effects

@@ -1,61 +1,44 @@
 #if os(macOS)
-import Cocoa
+import AppKit
 #else
 import UIKit
 #endif
 import CoreGraphics
 import SwiftUI
-import LiveValues
 import RenderKit
 import PixelKit
+import PixelColor
 
 public typealias FX = NODERepView
 
-#if os(macOS)
-public typealias _Color = NSColor
-#else
-public typealias _Color = UIColor
-#endif
-
 var didSetup: Bool = false
-var didSetLib: Bool = false
 
 func setup() {
-    guard didSetLib else { return }
     guard !didSetup else { return }
-    #if DEBUG
-//    PixelKit.main.logDebug()
-    #else
+    #if !DEBUG
     PixelKit.main.disableLogging()
     #endif
     didSetup = true
 }
 
-func setLib(url: URL) {
-    guard !didSetLib else { return }
-    guard FileManager.default.fileExists(atPath: url.path) else { return }
-    pixelKitMetalLibURL = url
-    didSetLib = true
-    setup()
-}
-
-public func fxMetalLib(url: URL) {
-    setLib(url: url)
-}
-
 extension View {
+    
     func pix() -> ViewPIX {
+        #if os(macOS)
+        let view: NSView = NSHostingController(rootView: self).view
+        view.wantsLayer = true
+        view.layer?.backgroundColor = .clear
+        #else
         let view: UIView = UIHostingController(rootView: self).view
         view.backgroundColor = .clear
+        #endif
         let viewPix = ViewPIX()
         viewPix.renderView = view
         return viewPix
     }
+    
     func fx(edit: (PIX & NODEOut) -> (PIX)) -> FX {
-        #if DEBUG && os(macOS)
-        setLib(url: FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Code/Frameworks/Production/PixelKit/Resources/Metal Libs/PixelKitShaders-macOS.metallib"))
-        #endif
-        guard didSetup else { fatalError("please call fxMetalLib(url:)") }
+        if !didSetup { setup() }
         let inPix: PIX & NODEOut
         if let fx: FX = self as? FX {
             inPix = fx.node as! PIX & NODEOut
@@ -69,6 +52,7 @@ extension View {
 }
 
 extension NODEOut {
+    
     func whiteOnBlack() -> ReorderPIX {
         let reorderPix = ReorderPIX()
         reorderPix.inputA = self as? PIX & NODEOut
@@ -79,6 +63,7 @@ extension NODEOut {
         reorderPix.alphaChannel = .one
         return reorderPix
     }
+    
     func primaryAlpha() -> CrossPIX {
         let darkPix = ReorderPIX()
         darkPix.inputA = self as? PIX & NODEOut
@@ -86,179 +71,182 @@ extension NODEOut {
         darkPix.redChannel = .zero
         darkPix.greenChannel = .zero
         darkPix.blueChannel = .zero
-        darkPix.alphaChannel = .lum
+        darkPix.alphaChannel = .luma
         let lightPix = ReorderPIX()
         lightPix.inputA = self as? PIX & NODEOut
         lightPix.inputB = self as? PIX & NODEOut
-        lightPix.redChannel = .lum
-        lightPix.greenChannel = .lum
-        lightPix.blueChannel = .lum
-        lightPix.alphaChannel = .lum
+        lightPix.redChannel = .luma
+        lightPix.greenChannel = .luma
+        lightPix.blueChannel = .luma
+        lightPix.alphaChannel = .luma
         let crossPix = CrossPIX()
         crossPix.inputA = darkPix
         crossPix.inputB = lightPix
-        crossPix.fraction = LiveBool.darkMode <?> 1.0 <=> 0.0
+        crossPix.fraction = PixelColor.appearance == .dark ? 1.0 : 0.0
         return crossPix
     }
 }
 
 public extension View {
     
-    func fxBlur(style: BlurPIX.BlurStyle = .regular,
-                radius: Binding<CGFloat>,
-                angle: Binding<CGFloat> = .constant(0.0),
-                position: Binding<CGPoint> = .constant(.zero),
+    func fxBlur(style: BlurPIX.BlurStyle = .gaussian,
+                radius: CGFloat,
+                angle: Angle = .zero,
+                position: CGPoint = .zero,
                 quality: PIX.SampleQualityMode = .mid) -> FX {
         fx { pix in
             let blurPix = BlurPIX()
             blurPix.input = pix
-            blurPix.radius = LiveFloat({ radius.wrappedValue })
+            blurPix.radius = radius
             blurPix.style = style
-            blurPix.angle = LiveFloat({ angle.wrappedValue })
-            blurPix.position = LivePoint({ position.wrappedValue })
+            blurPix.angle = angle.degrees / 360
+            blurPix.position = position
             blurPix.quality = quality
             return blurPix
         }
     }
     
-    func fxEdge(strength: Binding<CGFloat> = .constant(10.0),
-                distance: Binding<CGFloat> = .constant(1.0)) -> FX {
+    func fxEdge(strength: CGFloat = 10.0,
+                distance: CGFloat = 1.0) -> FX {
         fx { pix in
             let edgePix = EdgePIX()
             edgePix.input = pix
-            edgePix.strength = LiveFloat({ strength.wrappedValue })
-            edgePix.distance = LiveFloat({ distance.wrappedValue })
+            edgePix.strength = strength
+            edgePix.distance = distance
             edgePix.includeAlpha = true
             return edgePix.primaryAlpha()
         }
     }
     
-    func fxDisplace<Content: View>(distance: Binding<CGFloat> = .constant(0.1), with content: () -> (Content)) -> FX {
+    func fxDisplace<Content: View>(distance: CGFloat, with content: () -> (Content)) -> FX {
         fx { pix in
             let displacePix = DisplacePIX()
             displacePix.inputA = pix
             displacePix.inputB = content().pix()
-            displacePix.distance = LiveFloat({ distance.wrappedValue })
+            displacePix.distance = distance
             return displacePix
         }
     }
     
-    func fxDisplaceNoise(distance: Binding<CGFloat> = .constant(0.1),
-                         octaves: Binding<Int> = .constant(10),
-                         zPosition: Binding<CGFloat> = .constant(0.0)) -> FX {
+    func fxDisplaceNoise(distance: CGFloat = 0.1,
+                         octaves: Int = 10,
+                         zPosition: CGFloat = 0.0) -> FX {
         fx { pix in
             let noisePix = NoisePIX(at: ._1024)
             noisePix.colored = true
-            noisePix.octaves = LiveInt({ octaves.wrappedValue })
-            noisePix.zPosition = LiveFloat({ zPosition.wrappedValue })
+            noisePix.octaves = octaves
+            noisePix.zPosition = zPosition
             let displacePix = DisplacePIX()
-            displacePix.placement = .aspectFill
+            displacePix.placement = .fill
             displacePix.inputA = pix
             displacePix.inputB = noisePix
-            displacePix.distance = LiveFloat({ distance.wrappedValue })
+            displacePix.distance = distance
             return displacePix
         }
     }
     
-    func fxRainbowBlur(_ value: Binding<CGFloat>) -> FX {
-        fx { $0._rainbowBlur(LiveFloat({ value.wrappedValue })) }
+    func fxRainbowBlur(_ value: CGFloat) -> FX {
+        fx { $0.pixRainbowBlur(value) }
     }
     
-    func fxClamp(low: Binding<CGFloat> = .constant(0.0), high: Binding<CGFloat> = .constant(1.0)) -> FX {
-        fx { $0._clamp(low: LiveFloat({ low.wrappedValue }), high: LiveFloat({ high.wrappedValue })) }
+    func fxClamp(low: CGFloat = 0.0, high: CGFloat = 1.0) -> FX {
+        fx { $0.pixClamp(low: low, high: high) }
     }
     
-    func fxKaleidoscope(divisions: Binding<Int> = .constant(12), mirror: Binding<Bool> = .constant(true)) -> FX {
-        fx { $0._kaleidoscope(divisions: LiveInt({ divisions.wrappedValue }), mirror: LiveBool({ mirror.wrappedValue })) }
+    func fxKaleidoscope(divisions: Int = 12, mirror: Bool = true) -> FX {
+        fx { $0.pixKaleidoscope(divisions: divisions, mirror: mirror) }
     }
     
-    func fxBrightness(_ value: Binding<CGFloat>) -> FX {
-        fx { $0._brightness(LiveFloat({ value.wrappedValue })) }
+    func fxBrightness(_ value: CGFloat) -> FX {
+        fx { $0.pixBrightness(value) }
     }
     
-    func fxDarkness(_ value: Binding<CGFloat>) -> FX {
-        fx { $0._darkness(LiveFloat({ value.wrappedValue })) }
+    func fxDarkness(_ value: CGFloat) -> FX {
+        fx { $0.pixDarkness(value) }
     }
     
-    func fxContrast(_ value: Binding<CGFloat>) -> FX {
-        fx { $0._contrast(LiveFloat({ value.wrappedValue })) }
+    func fxContrast(_ value: CGFloat) -> FX {
+        fx { $0.pixContrast(value) }
     }
     
-    func fxGamma(_ value: Binding<CGFloat>) -> FX {
-        fx { $0._gamma(LiveFloat({ value.wrappedValue })) }
+    func fxGamma(_ value: CGFloat) -> FX {
+        fx { $0.pixGamma(value) }
     }
     
     func fxInvert() -> FX {
-        fx { $0._invert() }
+        fx { $0.pixInvert() }
     }
     
-    func fxOpacity(_ value: Binding<CGFloat>) -> FX {
-        fx { $0._opacity(LiveFloat({ value.wrappedValue })) }
+    func fxOpacity(_ value: CGFloat) -> FX {
+        fx { $0.pixOpacity(value) }
     }
     
-    func fxQuantize(fraction: Binding<CGFloat> = .constant(0.1)) -> FX {
-        fx { $0._quantize(LiveFloat({ fraction.wrappedValue })) }
+    func fxQuantize(fraction: CGFloat = 0.1) -> FX {
+        fx { $0.pixQuantize(fraction) }
     }
     
-    func fxSharpen(_ value: Binding<CGFloat> = .constant(2.0)) -> FX {
-        fx { $0._sharpen(LiveFloat({ value.wrappedValue })) }
+    func fxSharpen(_ value: CGFloat = 2.0) -> FX {
+        fx { $0.pixSharpen(value) }
     }
     
-    func fxSlope(_ value: Binding<CGFloat> = .constant(1.0)) -> FX {
-        fx { $0._slope(LiveFloat({ value.wrappedValue })) }
+    func fxSlope(_ value: CGFloat = 1.0) -> FX {
+        fx { $0.pixSlope(value) }
     }
     
-    func fxThreshold(_ value: Binding<CGFloat> = .constant(0.5)) -> FX {
-        fx { $0.whiteOnBlack()._threshold(LiveFloat({ value.wrappedValue })).primaryAlpha() }
+    func fxThreshold(_ value: CGFloat = 0.5) -> FX {
+        fx { $0.whiteOnBlack().pixThreshold(value).primaryAlpha() }
     }
     
-    func fxTwirl(_ value: Binding<CGFloat> = .constant(2.0)) -> FX {
-        fx { $0._twirl(LiveFloat({ value.wrappedValue })) }
+    func fxTwirl(_ value: CGFloat = 2.0) -> FX {
+        fx { $0.pixTwirl(value) }
     }
     
-    func fxRange(inLow: Binding<_Color> = .constant(.black), inHigh: Binding<_Color> = .constant(.white), outLow: Binding<_Color> = .constant(.black), outHigh: Binding<_Color> = .constant(.white)) -> FX {
-        fx { $0._range(inLow: LiveColor({ inLow.wrappedValue }), inHigh: LiveColor({ inHigh.wrappedValue }), outLow: LiveColor({ outLow.wrappedValue }), outHigh: LiveColor({ outHigh.wrappedValue })) }
+    @available(iOS 14.0, *)
+    @available(macOS 11.0, *)
+    func fxRange(inLow: Color = .black, inHigh: Color = .white, outLow: Color = .black, outHigh: Color = .white) -> FX {
+        fx { $0.pixRange(inLow: PixelColor(inLow), inHigh: PixelColor(inHigh), outLow: PixelColor(outLow), outHigh: PixelColor(outHigh)) }
     }
     
-    func fxRange(inLow: Binding<CGFloat> = .constant(0.0), inHigh: Binding<CGFloat> = .constant(1.0), outLow: Binding<CGFloat> = .constant(0.0), outHigh: Binding<CGFloat> = .constant(1.0)) -> FX {
-        fx { $0._range(inLow: LiveFloat({ inLow.wrappedValue }), inHigh: LiveFloat({ inHigh.wrappedValue }), outLow: LiveFloat({ outLow.wrappedValue }), outHigh: LiveFloat({ outHigh.wrappedValue })) }
+    func fxRange(inLow: CGFloat = 0.0, inHigh: CGFloat = 1.0, outLow: CGFloat = 0.0, outHigh: CGFloat = 1.0) -> FX {
+        fx { $0.pixRange(inLow: inLow, inHigh: inHigh, outLow: outLow, outHigh: outHigh) }
     }
     
-    func fxSaturation(_ value: Binding<CGFloat>) -> FX {
-        fx { $0._saturation(LiveFloat({ value.wrappedValue })) }
+    func fxSaturation(_ value: CGFloat) -> FX {
+        fx { $0.pixSaturation(value) }
     }
     
     func fxMonochrome() -> FX {
-        fxSaturation(.constant(0.0))
+        fxSaturation(0.0)
     }
     
-    func fxHue(_ value: Binding<CGFloat>) -> FX {
-        fx { $0._hue(LiveFloat({ value.wrappedValue })) }
+    func fxHue(_ value: CGFloat) -> FX {
+        fx { $0.pixHue(value) }
     }
     
-    func fxSepia(color: Binding<_Color>) -> FX {
+    @available(iOS 14.0, *)
+    @available(macOS 11.0, *)
+    func fxSepia(color: Color) -> FX {
         fx { imagePix in
             let sepiaPix = SepiaPIX()
             sepiaPix.input = imagePix
-            sepiaPix.color = LiveColor({ color.wrappedValue })
+            sepiaPix.color = PixelColor(color)
             return sepiaPix
         }
     }
     
     func fxFlipX() -> FX {
-        fx { $0._flipX() }
+        fx { $0.pixFlipX() }
     }
     
     func fxFlipY() -> FX {
-        fx { $0._flipY() }
+        fx { $0.pixFlipY() }
     }
     
     func fxFlopLeft() -> FX {
-        fx { $0._flopLeft() }
+        fx { $0.pixFlopLeft() }
     }
     
     func fxFlopRight() -> FX {
-        fx { $0._flopRight() }
+        fx { $0.pixFlopRight() }
     }
-    
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "container:">
+   </FileRef>
+   <FileRef
+      location = "group:../PixelColor">
+   </FileRef>
+   <FileRef
+      location = "group:../PixelKit">
+   </FileRef>
+   <FileRef
+      location = "group:../RenderKit">
+   </FileRef>
+   <FileRef
+      location = "group:../Resolution">
+   </FileRef>
+</Workspace>

@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.5
 
 import PackageDescription
 
@@ -7,25 +7,22 @@ let package = Package(
     platforms: [
         .iOS(.v13),
         .macOS(.v10_15),
-        .tvOS(.v13)
     ],
     products: [
         .library(name: "SwiftFX",
                  targets: ["SwiftFX"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hexagons/LiveValues.git", .exact("1.2.1")),
-        .package(url: "https://github.com/hexagons/RenderKit.git", .exact("0.4.6")),
-        .package(url: "https://github.com/hexagons/PixelKit.git", .exact("1.0.10")),
+        .package(url: "https://github.com/heestand-xyz/RenderKit", from: "1.0.0"),
+        .package(url: "https://github.com/heestand-xyz/PixelKit", from: "2.0.3"),
+        .package(url: "https://github.com/heestand-xyz/PixelColor", from: "1.2.3"),
     ],
     targets: [
         .target(name: "SwiftFX",
                 dependencies: [
-                    "LiveValues",
                     "RenderKit",
                     "PixelKit",
+                    "PixelColor",
                 ]),
-        .testTarget(name: "SwiftFXTests",
-                    dependencies: ["SwiftFX"]),
     ]
 )

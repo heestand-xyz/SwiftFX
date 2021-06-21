@@ -5,25 +5,23 @@ Powered by Metal through [PixelKit](https://github.com/hexagons/pixelkit)
 
 ## Example
 
-~~~swift
+```swift
 import SwiftUI
 import SwiftFX
-~~~
+```
 
-~~~swift
+```swift
 struct ContentView: View {
-    @State var value: CGFloat = 0.5
     var body: some View {
         VStack {
             Text("Hello, World!")
                 .font(.system(size: 50, weight: .bold, design: .rounded))
                 .fxEdge()
-                .fxBlur(style: .zoom, radius: $value)
-            Slider(value: $value)
+                .fxBlur(style: .zoom, radius: 0.5)
         }
     }
 }
-~~~
+```
 | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world.png?raw=true" width="256"/> | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world_edge.png?raw=true" width="256"/> | <img src="https://github.com/hexagons/SwiftFX/blob/master/Assets/Text/hello_world_edge_zoom_blur.png?raw=true" width="256"/> |
 | --- | --- | --- |
 |  `Text("Hello, World!")`  |  `.fxEdge()`  |  `.fxBlur(style: .zoom)`  |
@@ -31,26 +29,13 @@ struct ContentView: View {
 
 ## Install
 
-~~~~swift
-.package(url: "https://github.com/hexagons/SwiftFX.git", from: "0.1.1")
-~~~~
-
-## Setup
-
-~~~~swift
-#if os(iOS)
-fxMetalLib(url: Bundle.main.url(forResource: "PixelKitShaders-iOS", withExtension: "metallib")!)
-#elseif os(macOS)
-fxMetalLib(url: URL(fileURLWithPath: "/path/to/PixelKitShaders-macOS.metallib"))
-#endif
-~~~~
-
-You can find the latest Metal library from PixelKit [here](https://github.com/hexagons/PixelKit/tree/master/Resources/Metal%20Libs).
-
+```swift
+.package(url: "https://github.com/heestand-xyz/SwiftFX.git", from: "1.0.0")
+```
 
 ## Effects
 
-~~~swift
+```swift
 
 func fxBlur(style, radius, angle, position, quality) -> FX
 
@@ -105,4 +90,4 @@ func fxFlipY() -> FX
 func fxFlopLeft() -> FX
 
 func fxFlopRight() -> FX
-~~~
+```
